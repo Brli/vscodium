@@ -1,0 +1,2 @@
+# vscodium
+PKGBUILD for Vscodium
