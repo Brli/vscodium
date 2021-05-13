@@ -1,0 +1,35 @@
+pkgbase = vscodium
+	pkgdesc = Free/Libre Open Source Software Binaries of VSCode (git build from latest release).
+	pkgver = 1.56.1
+	pkgrel = 1
+	url = https://github.com/VSCodium/vscodium.git
+	arch = x86_64
+	arch = aarch64
+	arch = armv7h
+	license = MIT
+	makedepends = git
+	makedepends = gulp
+	makedepends = npm
+	makedepends = python2
+	makedepends = yarn
+	makedepends = nodejs-lts-erbium
+	makedepends = jq
+	depends = electron
+	depends = libsecret
+	depends = libx11
+	depends = libxkbfile
+	depends = ripgrep
+	optdepends = bash-completion: Bash completions
+	optdepends = zsh-completions: ZSH completitons
+	optdepends = x11-ssh-askpass: SSH authentication
+	provides = code
+	conflicts = code
+	source = git+https://github.com/VSCodium/vscodium.git#tag=1.56.1
+	source = git+https://github.com/microsoft/vscode.git#tag=1.56.1
+	source = code.js
+	sha256sums = SKIP
+	sha256sums = SKIP
+	sha256sums = bf5f553e1f31bc577255b08e109e7df27f3d052b00fb3f2eab2ecfe47f99b4ac
+
+pkgname = vscodium
+
