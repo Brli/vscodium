@@ -1,21 +1,12 @@
-# Maintainer: Cedric Roijakkers <cedric [the at sign goes here] roijakkers [the dot sign goes here] be>.
-# Inspired from the PKGBUILD for vscodium-bin and code-stable-git.
+# Maintainer: BrLi <brli [at] chakralinux [dot] org>
 
 pkgname=vscodium
-# Make sure the pkgver matches the git tags in vscodium and vscode git repo's!
 pkgver=1.56.1
 pkgrel=1
-pkgdesc="Free/Libre Open Source Software Binaries of VSCode (git build from latest release)."
+pkgdesc="Free/Libre Open Source Software Binaries of VSCode"
 arch=('x86_64' 'aarch64' 'armv7h')
-# The vscodium repo that will be checked out.
-url='https://github.com/VSCodium/vscodium.git'
-# The vscode repo that will also be checked out.
-microsofturl='https://github.com/microsoft/vscode.git'
+url='https://vscodium.com'
 license=('MIT')
-
-# Version of NodeJS that will be used to create the build. Check the Travis CI build to find the correct version.
-# See: https://travis-ci.com/github/VSCodium/vscodium
-_nodejs='12.14.1'
 
 # Important: Remember to check https://github.com/microsoft/vscode/blob/master/.yarnrc (choose correct tag) for target electron version
 _electron=electron
@@ -25,11 +16,9 @@ optdepends=('bash-completion: Bash completions'
             'zsh-completions: ZSH completitons'
             'x11-ssh-askpass: SSH authentication')
 makedepends=('git' 'gulp' 'npm' 'python2' 'yarn' 'nodejs-lts-erbium' 'jq')
-source=(
-    "git+${url}#tag=${pkgver}"
-    "git+${microsofturl}#tag=${pkgver}"
-    'code.js'
-)
+source=("git+https://github.com/VSCodium/vscodium.git#tag=${pkgver}"
+        "git+https://github.com/microsoft/vscode.git#tag=${pkgver}"
+        'code.js')
 sha256sums=('SKIP'
             'SKIP'
             'bf5f553e1f31bc577255b08e109e7df27f3d052b00fb3f2eab2ecfe47f99b4ac')
@@ -58,12 +47,13 @@ esac
 
 prepare() {
     cd 'vscodium'
-    # Normally, we would execute get_repo.sh to clone the Microsoft repo here, but makepkg can't do this.
-    # So we rely on the clone that happened earlier, and move the git directory to the expected place.
+
+    # ./get_repo.sh
+    # Fetched in source=()
     rm -rf 'vscode'
     mv '../vscode' 'vscode'
 
-    # Configuration from Official Code build
+    # Configuration from Arch community/code
     cd 'vscode'
     # Set the commit and build date
     local _commit=$(git rev-parse HEAD)
@@ -137,9 +127,11 @@ build() {
 }
 
 package() {
+    cd "$pkgname"
+
     # Install resource files
     install -dm 755 "$pkgdir"/usr/lib/$pkgname
-    cp -r --no-preserve=ownership --preserve=mode $pkgname/VSCode-linux-$_vscode_arch/resources/app/* "$pkgdir"/usr/lib/$pkgname/
+    cp -r --no-preserve=ownership --preserve=mode VSCode-linux-$_vscode_arch/resources/app/* "$pkgdir"/usr/lib/$pkgname/
 
     # Replace statically included binary with system copy
     ln -sf /usr/bin/rg "$pkgdir/usr/lib/$pkgname/node_modules.asar.unpacked/vscode-ripgrep/bin/rg"
@@ -151,13 +143,13 @@ package() {
 ELECTRON_RUN_AS_NODE=1 exec $_electron /usr/lib/vscodium/out/cli.js /usr/lib/vscodium/code.js "\$@"
 END
     install -Dm 755 code.js "$pkgdir"/usr/lib/$pkgname/code.js
-    # Code compatible links
+
+    # Code compatible symlinks
     ln -sf /usr/bin/codium "$pkgdir"/usr/bin/vscode
     ln -sf /usr/bin/codium "$pkgdir"/usr/bin/code
     ln -sf /usr/bin/codium "$pkgdir"/usr/bin/vscode
     ln -sf /usr/bin/codium "$pkgdir"/usr/bin/vscodium
 
-    cd "$pkgname"
     # Install appdata and desktop file
     install -Dm 644 vscode/resources/linux/code.appdata.xml "$pkgdir"/usr/share/metainfo/codium.appdata.xml
     install -Dm 644 vscode/resources/linux/code.desktop "$pkgdir"/usr/share/applications/codium.desktop
