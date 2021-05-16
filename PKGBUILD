@@ -108,13 +108,10 @@ build() {
     ln -sf /usr/bin/python2 path/python
     export PATH="$PWD/path:$PATH"
 
-    cd vscodium/vscode
-
-    # Command from ./prepare_vscode.sh
-    CHILD_CONCURRENCY=1 yarn --frozen-lockfile
+    cd 'vscodium/vscode'
 
     # Command in community/code
-    yarn install --arch=$_vscode_arch --frozen-lockfile
+    CHILD_CONCURRENCY=1 yarn install --arch=$_vscode_arch --frozen-lockfile
 
     # The default memory limit may be too low for current versions of node
     # to successfully build vscode. Change it if this number still doesn't
@@ -133,7 +130,7 @@ build() {
 }
 
 package() {
-    cd "$pkgname"
+    cd 'vscodium'
 
     # Install resource files
     install -dm 755 "$pkgdir"/usr/lib/$pkgname
@@ -148,7 +145,7 @@ package() {
 
 ELECTRON_RUN_AS_NODE=1 exec $_electron /usr/lib/vscodium/out/cli.js /usr/lib/vscodium/code.js "\$@"
 END
-    install -Dm 755 code.js "$pkgdir"/usr/lib/$pkgname/code.js
+    install -Dm 755 "$srcdir"/code.js "$pkgdir"/usr/lib/$pkgname/code.js
 
     # Code compatible symlinks
     ln -sf /usr/bin/codium "$pkgdir"/usr/bin/vscode
