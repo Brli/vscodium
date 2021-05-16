@@ -121,15 +121,6 @@ build() {
     # work for your system.
     mem_limit="--max_old_space_size=6144"
 
-    # Redundant command from vscodium/build.sh
-    /usr/bin/node node_modules/.bin/tsc -p src/tsconfig.monaco.json --noEmit
-    /usr/bin/node build/lib/layersChecker.js
-
-    /usr/bin/node $mem_limit /usr/bin/gulp compile-build
-    /usr/bin/node $mem_limit /usr/bin/gulp compile-extensions-build
-    /usr/bin/node $mem_limit /usr/bin/gulp minify-vscode
-
-
     if ! /usr/bin/node $mem_limit /usr/bin/gulp vscode-linux-$_vscode_arch-min
     then
         echo
