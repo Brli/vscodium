@@ -1,7 +1,7 @@
 # Maintainer: BrLi <brli [at] chakralinux [dot] org>
 
 pkgname=vscodium
-pkgver=1.56.1
+pkgver=1.56.2
 pkgrel=1
 pkgdesc="Free/Libre Open Source Software Binaries of VSCode"
 arch=('x86_64' 'aarch64' 'armv7h')
@@ -21,7 +21,7 @@ source=("git+https://github.com/VSCodium/vscodium.git#tag=${pkgver}"
         'code.js')
 sha256sums=('SKIP'
             'SKIP'
-            'bf5f553e1f31bc577255b08e109e7df27f3d052b00fb3f2eab2ecfe47f99b4ac')
+            '44c252c08fe9c76dc0351c88bc76c3bcf5e32f5c2286cc82cd2a52cca0217fbc')
 provides=('code')
 conflicts=('code')
 
@@ -97,6 +97,8 @@ prepare() {
     # Undo Telemetry
     # Sed around to be VSCodium
     cd ..
+    # We don't build in prepare()
+    sed 's/yarn/#yarn/g' -i prepare_vscode.sh
     ./prepare_vscode.sh
 }
 
@@ -108,12 +110,25 @@ build() {
 
     cd vscodium/vscode
 
-    yarn install --arch=$_vscode_arch
+    # Command from ./prepare_vscode.sh
+    CHILD_CONCURRENCY=1 yarn --frozen-lockfile
+
+    # Command in community/code
+    yarn install --arch=$_vscode_arch --frozen-lockfile
 
     # The default memory limit may be too low for current versions of node
     # to successfully build vscode. Change it if this number still doesn't
     # work for your system.
     mem_limit="--max_old_space_size=6144"
+
+    # Redundant command from vscodium/build.sh
+    /usr/bin/node node_modules/.bin/tsc -p src/tsconfig.monaco.json --noEmit
+    /usr/bin/node build/lib/layersChecker.js
+
+    /usr/bin/node $mem_limit /usr/bin/gulp compile-build
+    /usr/bin/node $mem_limit /usr/bin/gulp compile-extensions-build
+    /usr/bin/node $mem_limit /usr/bin/gulp minify-vscode
+
 
     if ! /usr/bin/node $mem_limit /usr/bin/gulp vscode-linux-$_vscode_arch-min
     then
