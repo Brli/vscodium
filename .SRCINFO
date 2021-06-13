@@ -1,8 +1,8 @@
 pkgbase = vscodium
-	pkgdesc = Free/Libre Open Source Software Binaries of VSCode (git build from latest release).
-	pkgver = 1.56.1
+	pkgdesc = Free/Libre Open Source Software Binaries of VSCode
+	pkgver = 1.57.0
 	pkgrel = 1
-	url = https://github.com/VSCodium/vscodium.git
+	url = https://vscodium.com
 	arch = x86_64
 	arch = aarch64
 	arch = armv7h
@@ -24,12 +24,11 @@ pkgbase = vscodium
 	optdepends = x11-ssh-askpass: SSH authentication
 	provides = code
 	conflicts = code
-	source = git+https://github.com/VSCodium/vscodium.git#tag=1.56.1
-	source = git+https://github.com/microsoft/vscode.git#tag=1.56.1
+	source = git+https://github.com/VSCodium/vscodium.git#tag=1.57.0
+	source = git+https://github.com/microsoft/vscode.git#tag=1.57.0
 	source = code.js
 	sha256sums = SKIP
 	sha256sums = SKIP
-	sha256sums = bf5f553e1f31bc577255b08e109e7df27f3d052b00fb3f2eab2ecfe47f99b4ac
+	sha256sums = 44c252c08fe9c76dc0351c88bc76c3bcf5e32f5c2286cc82cd2a52cca0217fbc
 
 pkgname = vscodium
-
