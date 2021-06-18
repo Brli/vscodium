@@ -1,7 +1,7 @@
 # Maintainer: BrLi <brli [at] chakralinux [dot] org>
 
 pkgname=vscodium
-pkgver=1.57.0
+pkgver=1.57.1
 pkgrel=1
 pkgdesc="Free/Libre Open Source Software Binaries of VSCode"
 arch=('x86_64' 'aarch64' 'armv7h')
@@ -18,9 +18,11 @@ optdepends=('bash-completion: Bash completions'
 makedepends=('git' 'gulp' 'npm' 'python2' 'yarn' 'nodejs-lts-erbium' 'jq')
 source=("git+https://github.com/VSCodium/vscodium.git#tag=${pkgver}"
         "git+https://github.com/microsoft/vscode.git#tag=${pkgver}"
-        'code.js')
+        'product_json.diff'
+        'codium.js')
 sha256sums=('SKIP'
             'SKIP'
+            '3f147cc835dd53ad3697a0234b9e4c74187220d6a73479bd0685011194457555'
             '44c252c08fe9c76dc0351c88bc76c3bcf5e32f5c2286cc82cd2a52cca0217fbc')
 provides=('code')
 conflicts=('code')
@@ -51,14 +53,17 @@ prepare() {
     # ./get_repo.sh
     # Fetched in source=()
     rm -rf 'vscode'
-    mv '../vscode' 'vscode'
+    mv "${srcdir}/vscode" 'vscode'
 
     # Configuration from Arch community/code
     cd 'vscode'
+    patch -p0 -i "${srcdir}/product_json.diff"
+
     # Set the commit and build date
     local _commit=$(git rev-parse HEAD)
     local _datestamp=$(date -u -Is | sed 's/\+00:00/Z/')
     sed -e "s/@COMMIT@/$_commit/" -e "s/@DATE@/$_datestamp/" -i product.json
+    sed 's,\.vscode-oss,\.config/VSCodium,' -i product.json
 
     # Build native modules for system electron
     local _target=$(</usr/lib/$_electron/version)
@@ -143,14 +148,13 @@ package() {
     install -Dm 755 /dev/stdin "$pkgdir"/usr/bin/codium<<END
 #!/bin/bash
 
-ELECTRON_RUN_AS_NODE=1 exec $_electron /usr/lib/vscodium/out/cli.js /usr/lib/vscodium/code.js "\$@"
+ELECTRON_RUN_AS_NODE=1 exec $_electron /usr/lib/vscodium/out/cli.js /usr/lib/vscodium/codium.js "\$@"
 END
-    install -Dm 755 "$srcdir"/code.js "$pkgdir"/usr/lib/$pkgname/code.js
+    install -Dm 755 "$srcdir"/codium.js "$pkgdir"/usr/lib/$pkgname/codium.js
 
     # Code compatible symlinks
     ln -sf /usr/bin/codium "$pkgdir"/usr/bin/vscode
     ln -sf /usr/bin/codium "$pkgdir"/usr/bin/code
-    ln -sf /usr/bin/codium "$pkgdir"/usr/bin/vscode
     ln -sf /usr/bin/codium "$pkgdir"/usr/bin/vscodium
 
     # Install appdata and desktop file
