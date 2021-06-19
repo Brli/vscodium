@@ -16,16 +16,17 @@ optdepends=('bash-completion: Bash completions'
             'zsh-completions: ZSH completitons'
             'x11-ssh-askpass: SSH authentication')
 makedepends=('git' 'gulp' 'npm' 'python2' 'yarn' 'nodejs-lts-erbium' 'jq')
+provides=('code')
+conflicts=('code')
+options=('!strip')
 source=("git+https://github.com/VSCodium/vscodium.git#tag=${pkgver}"
         "git+https://github.com/microsoft/vscode.git#tag=${pkgver}"
         'product_json.diff'
-        'codium.js')
+        'code.js')
 sha256sums=('SKIP'
             'SKIP'
             '3f147cc835dd53ad3697a0234b9e4c74187220d6a73479bd0685011194457555'
             '44c252c08fe9c76dc0351c88bc76c3bcf5e32f5c2286cc82cd2a52cca0217fbc')
-provides=('code')
-conflicts=('code')
 
 ###############################################################################
 
@@ -148,9 +149,9 @@ package() {
     install -Dm 755 /dev/stdin "$pkgdir"/usr/bin/codium<<END
 #!/bin/bash
 
-ELECTRON_RUN_AS_NODE=1 exec $_electron /usr/lib/vscodium/out/cli.js /usr/lib/vscodium/codium.js "\$@"
+ELECTRON_RUN_AS_NODE=1 exec $_electron /usr/lib/vscodium/out/cli.js /usr/lib/vscodium/code.js "\$@"
 END
-    install -Dm 755 "$srcdir"/codium.js "$pkgdir"/usr/lib/$pkgname/codium.js
+    install -Dm 755 "$srcdir"/code.js "$pkgdir"/usr/lib/$pkgname/code.js
 
     # Code compatible symlinks
     ln -sf /usr/bin/codium "$pkgdir"/usr/bin/vscode
