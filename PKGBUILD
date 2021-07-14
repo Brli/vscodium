@@ -1,7 +1,7 @@
 # Maintainer: BrLi <brli [at] chakralinux [dot] org>
 
 pkgname=vscodium
-pkgver=1.58.0
+pkgver=1.58.1
 pkgrel=1
 pkgdesc="Free/Libre Open Source Software Binaries of VSCode"
 arch=('x86_64' 'aarch64' 'armv7h')
