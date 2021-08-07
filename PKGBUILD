@@ -1,7 +1,7 @@
 # Maintainer: BrLi <brli [at] chakralinux [dot] org>
 
 pkgname=vscodium
-pkgver=1.58.2
+pkgver=1.59.0
 pkgrel=1
 pkgdesc="Free/Libre Open Source Software Binaries of VSCode"
 arch=('x86_64' 'aarch64' 'armv7h')
@@ -9,7 +9,7 @@ url='https://vscodium.com'
 license=('MIT')
 
 # Important: Remember to check https://github.com/microsoft/vscode/blob/master/.yarnrc (choose correct tag) for target electron version
-_electron=electron12
+_electron=electron
 
 depends=($_electron 'libsecret' 'libx11' 'libxkbfile' 'ripgrep')
 optdepends=('bash-completion: Bash completions'
