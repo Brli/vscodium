@@ -1,7 +1,7 @@
 # Maintainer: BrLi <brli [at] chakralinux [dot] org>
 
 pkgname=vscodium
-pkgver=1.59.0
+pkgver=1.59.1
 pkgrel=1
 pkgdesc="Free/Libre Open Source Software Binaries of VSCode"
 arch=('x86_64' 'aarch64' 'armv7h')
@@ -81,7 +81,7 @@ prepare() {
             s|@@URLPROTOCOL@@|vscodium|g
             s|inode/directory;||' resources/linux/code{.desktop,-url-handler.desktop}
 
-    sed -i 's|MimeType=.*|MimeType=x-scheme-handler/codium;|' resources/linux/code-url-handler.desktop
+    sed -i 's|MimeType=.*|MimeType=x-scheme-handler/vscode;|' resources/linux/code-url-handler.desktop
 
 
     # Add completitions for vscodium
