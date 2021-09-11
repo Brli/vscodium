@@ -1,7 +1,7 @@
 # Maintainer: BrLi <brli [at] chakralinux [dot] org>
 
 pkgname=vscodium
-pkgver=1.59.1
+pkgver=1.60.0
 pkgrel=1
 pkgdesc="Free/Libre Open Source Software Binaries of VSCode"
 arch=('x86_64' 'aarch64' 'armv7h')
@@ -15,16 +15,18 @@ depends=($_electron 'libsecret' 'libx11' 'libxkbfile' 'ripgrep')
 optdepends=('bash-completion: Bash completions'
             'zsh-completions: ZSH completitons'
             'x11-ssh-askpass: SSH authentication')
-makedepends=('git' 'gulp' 'npm' 'python' 'yarn' 'nodejs' 'jq')
+makedepends=('git' 'gulp' 'python' 'yarn' 'nodejs' 'jq')
 provides=('code')
 conflicts=('code')
 options=('!strip')
 source=("git+https://github.com/VSCodium/vscodium.git#tag=${pkgver}"
         "git+https://github.com/microsoft/vscode.git#tag=${pkgver}"
+        'prepare-sh-remove-yarn-lines.patch'
         'product_json.diff'
         'codium.js')
 sha256sums=('SKIP'
             'SKIP'
+            '2c10d5a6243dbe969019c2cce7874289d5e39e69e80316ddf17f2cc7d60bc520'
             '3f147cc835dd53ad3697a0234b9e4c74187220d6a73479bd0685011194457555'
             '44c252c08fe9c76dc0351c88bc76c3bcf5e32f5c2286cc82cd2a52cca0217fbc')
 
@@ -104,7 +106,7 @@ prepare() {
     # Sed around to be VSCodium
     cd ..
     # We don't build in prepare()
-    sed 's/yarn/#yarn/g' -i prepare_vscode.sh
+    patch -Np1 -i "${srcdir}/prepare-sh-remove-yarn-lines.patch"
     ./prepare_vscode.sh
 }
 

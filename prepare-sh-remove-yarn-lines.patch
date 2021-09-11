@@ -1,0 +1,30 @@
+From d68d46f5cd840ae2227c05ed53c9fe031dac5002 Mon Sep 17 00:00:00 2001
+From: BrLi <brli@chakralinux.org>
+Date: Sat, 11 Sep 2021 23:56:29 +0800
+Subject: [PATCH] prepare.sh: remove yarn lines
+
+---
+ prepare_vscode.sh | 7 -------
+ 1 file changed, 7 deletions(-)
+
+diff --git a/prepare_vscode.sh b/prepare_vscode.sh
+index 0f17ec4..0bfd4dc 100755
+--- a/prepare_vscode.sh
++++ b/prepare_vscode.sh
+@@ -32,13 +32,6 @@ done
+ 
+ set -x
+ 
+-if [[ "$OS_NAME" == "osx" ]]; then
+-  CHILD_CONCURRENCY=1 yarn --frozen-lockfile --ignore-optional
+-  npm_config_argv='{"original":["--ignore-optional"]}' yarn postinstall
+-else
+-  CHILD_CONCURRENCY=1 yarn --frozen-lockfile
+-fi
+-
+ mv product.json product.json.bak
+ 
+ # set fields in product.json
+-- 
+2.33.0
+
