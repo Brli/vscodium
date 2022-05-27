@@ -27,7 +27,7 @@ source=("git+https://github.com/VSCodium/vscodium.git#tag=${pkgver}"
         'codium.js')
 sha256sums=('SKIP'
             'SKIP'
-            '2c10d5a6243dbe969019c2cce7874289d5e39e69e80316ddf17f2cc7d60bc520'
+            '9ebc8abd522b17f73a70eab9d14acd55d3a40b3888bd6b4dc7e160eff85b659a'
             '3f147cc835dd53ad3697a0234b9e4c74187220d6a73479bd0685011194457555'
             '44c252c08fe9c76dc0351c88bc76c3bcf5e32f5c2286cc82cd2a52cca0217fbc')
 
