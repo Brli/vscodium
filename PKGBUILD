@@ -1,7 +1,7 @@
 # Maintainer: BrLi <brli [at] chakralinux [dot] org>
 
 pkgname=vscodium
-pkgver=1.62.2
+pkgver=1.67.2
 pkgrel=1
 pkgdesc="Free/Libre Open Source Software Binaries of VSCode"
 arch=('x86_64' 'aarch64' 'armv7h')
@@ -9,13 +9,14 @@ url='https://vscodium.com'
 license=('MIT')
 
 # Important: Remember to check https://github.com/microsoft/vscode/blob/master/.yarnrc (choose correct tag) for target electron version
-_electron=electron13
+_electron=electron
 
 depends=($_electron 'libsecret' 'libx11' 'libxkbfile' 'ripgrep')
 optdepends=('bash-completion: Bash completions'
             'zsh-completions: ZSH completitons'
             'x11-ssh-askpass: SSH authentication')
-makedepends=('git' 'gulp' 'python' 'yarn' 'nodejs' 'jq')
+makedepends=('git' 'gulp' 'npm' 'python' 'yarn' 'nodejs-lts-fermium' # dependencies for vscode
+             'jq') # explictly required for generating customized product.json
 provides=('code')
 conflicts=('code')
 options=('!strip')
@@ -112,35 +113,22 @@ prepare() {
 
 build() {
     cd 'vscodium/vscode'
-
-    # Command in community/code
-    CHILD_CONCURRENCY=1 yarn install --arch=$_vscode_arch --frozen-lockfile
-
-    # The default memory limit may be too low for current versions of node
-    # to successfully build vscode. Change it if this number still doesn't
-    # work for your system.
-    mem_limit="--max_old_space_size=6144"
-
-    if ! /usr/bin/node $mem_limit /usr/bin/gulp vscode-linux-$_vscode_arch-min
-    then
-        echo
-        echo "*** NOTE: If the build failed due to running out of file handles (EMFILE),"
-        echo "*** you will need to raise your max open file limit."
-        echo "*** You can check this for more information on how to increase this limit:"
-        echo "***    https://ro-che.info/articles/2017-03-26-increase-open-files-limit"
-        exit 1
-    fi
+    yarn install --arch=$_vscode_arch
+    gulp compile-build
+    gulp compile-extension-media
+    gulp compile-extensions-build
+    gulp vscode-linux-$_vscode_arch-min
 }
 
 package() {
     cd 'vscodium'
 
     # Install resource files
-    install -dm 755 "$pkgdir"/usr/lib/$pkgname
+    install -dm 755 "$pkgdir/usr/lib/$pkgname"
     cp -r --no-preserve=ownership --preserve=mode VSCode-linux-$_vscode_arch/resources/app/* "$pkgdir"/usr/lib/$pkgname/
 
     # Replace statically included binary with system copy
-    ln -sf /usr/bin/rg "$pkgdir/usr/lib/$pkgname/node_modules.asar.unpacked/vscode-ripgrep/bin/rg"
+    ln -sf /usr/bin/rg "$pkgdir/usr/lib/$pkgname/node_modules.asar.unpacked/@vscode/ripgrep/bin/rg"
 
     # Install binary
     install -Dm 755 /dev/stdin "$pkgdir"/usr/bin/codium<<END
