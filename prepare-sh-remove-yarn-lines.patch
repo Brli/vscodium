@@ -1,23 +1,33 @@
-From 51b20e3114a91d612b163b35cbf8e5ae9a78d714 Mon Sep 17 00:00:00 2001
+From e1fd95a206a8b13774042dabeb6fd624a512fb7f Mon Sep 17 00:00:00 2001
 From: BrLi <brli@chakralinux.org>
-Date: Fri, 27 May 2022 22:32:33 +0800
+Date: Sun, 21 Aug 2022 19:48:10 +0800
 Subject: [PATCH] prepare.sh: remove yarn lines
 
 ---
- prepare_vscode.sh | 17 -----------------
- 1 file changed, 17 deletions(-)
+ prepare_vscode.sh | 22 ----------------------
+ 1 file changed, 22 deletions(-)
 
 diff --git a/prepare_vscode.sh b/prepare_vscode.sh
-index 0334d00..4317d9c 100755
+index 9f50057..36248b5 100755
 --- a/prepare_vscode.sh
 +++ b/prepare_vscode.sh
-@@ -34,23 +34,6 @@ done
- 
- set -x
- 
+@@ -13,7 +13,6 @@ cd vscode || { echo "'vscode' dir not found"; exit 1; }
+ ../update_settings.sh
+
+ # apply patches
+-{ set +x; } 2>/dev/null
+
+ for file in ../patches/*.patch; do
+   if [ -f "${file}" ]; then
+@@ -35,25 +34,6 @@ for file in ../patches/user/*.patch; do
+   fi
+ done
+
+-set -x
+-
 -if [[ "${OS_NAME}" == "osx" ]]; then
--  CHILD_CONCURRENCY=1 yarn --frozen-lockfile --ignore-optional
--  npm_config_argv='{"original":["--ignore-optional"]}' yarn postinstall
+-  CHILD_CONCURRENCY=1 yarn --frozen-lockfile
+-  yarn postinstall
 -elif [[ "${npm_config_arch}" == "armv7l" || "${npm_config_arch}" == "ia32" ]]; then
 -  # node-gyp@9.0.0 shipped with node@16.15.0 starts using config.gypi
 -  # from the custom headers path if dist-url option was set instead of
@@ -33,7 +43,17 @@ index 0334d00..4317d9c 100755
 -fi
 -
  mv product.json product.json.bak
- 
+
  # set fields in product.json
+@@ -94,8 +74,6 @@ cat product.json.bak | jq "${product_json_changes}" > product.json.tmp
+ jq -s '.[0] * .[1]' product.json.tmp ../product.json > product.json
+ rm -f product.json.tmp
+
+-cat product.json
+-
+ mv package.json package.json.bak
+ package_json_changes="setpath(["\""version"\""]; "\""${RELEASE_VERSION}"\"") | setpath(["\""release"\""]; "\""${RELEASE_VERSION}"\"")"
+ cat package.json.bak | jq "${package_json_changes}" > package.json
 -- 
-2.36.1
+2.37.2
+

@@ -1,33 +1,33 @@
 # Maintainer: BrLi <brli [at] chakralinux [dot] org>
 
 pkgname=vscodium
-pkgver=1.67.2
-pkgrel=1
+pkgver=1.74.2.22355
+pkgrel=3
 pkgdesc="Free/Libre Open Source Software Binaries of VSCode"
 arch=('x86_64' 'aarch64' 'armv7h')
 url='https://vscodium.com'
 license=('MIT')
 
 # Important: Remember to check https://github.com/microsoft/vscode/blob/master/.yarnrc (choose correct tag) for target electron version
-_electron=electron
+_electron=electron19
 
 depends=($_electron 'libsecret' 'libx11' 'libxkbfile' 'ripgrep')
 optdepends=('bash-completion: Bash completions'
             'zsh-completions: ZSH completitons'
             'x11-ssh-askpass: SSH authentication')
-makedepends=('git' 'gulp' 'npm' 'python' 'yarn' 'nodejs-lts-fermium' # dependencies for vscode
+makedepends=('git' 'gulp' 'npm' 'python' 'yarn' 'nodejs-lts-gallium' # dependencies for vscode
              'jq') # explictly required for generating customized product.json
 provides=('code')
 conflicts=('code')
 options=('!strip')
 source=("git+https://github.com/VSCodium/vscodium.git#tag=${pkgver}"
-        "git+https://github.com/microsoft/vscode.git#tag=${pkgver}"
-        'prepare-sh-remove-yarn-lines.patch'
+        "git+https://github.com/microsoft/vscode.git#tag=${pkgver:0:6}"
+        "git+https://github.com/flathub/com.vscodium.codium.git"
         'product_json.diff'
         'codium.js')
 sha256sums=('SKIP'
             'SKIP'
-            '9ebc8abd522b17f73a70eab9d14acd55d3a40b3888bd6b4dc7e160eff85b659a'
+            'SKIP'
             '3f147cc835dd53ad3697a0234b9e4c74187220d6a73479bd0685011194457555'
             '44c252c08fe9c76dc0351c88bc76c3bcf5e32f5c2286cc82cd2a52cca0217fbc')
 
@@ -61,13 +61,20 @@ prepare() {
 
     # Configuration from Arch community/code
     cd 'vscode'
+
+    # Change electron binary name to the target electron
+    sed -i "s|#!/usr/bin/electron|#!/usr/bin/$_electron|" "${srcdir}/codium.js"
+
+    # This patch no longer contains proprietary modifications.
+    # See https://github.com/Microsoft/vscode/issues/31168 for details.
     patch -p0 -i "${srcdir}/product_json.diff"
 
     # Set the commit and build date
     local _commit=$(git rev-parse HEAD)
     local _datestamp=$(date -u -Is | sed 's/\+00:00/Z/')
-    sed -e "s/@COMMIT@/$_commit/" -e "s/@DATE@/$_datestamp/" -i product.json
-    sed 's,\.vscode-oss,\.config/VSCodium,' -i product.json
+    sed -i "s/@COMMIT@/$_commit/
+            s/@DATE@/$_datestamp/
+            s,\.vscode-oss,\.config/VSCodium," product.json
 
     # Build native modules for system electron
     local _target=$(</usr/lib/$_electron/version)
@@ -81,10 +88,9 @@ prepare() {
             s|@@ICON@@|vscodium|g
             s|@@EXEC@@|/usr/bin/codium|g
             s|@@LICENSE@@|MIT|g
-            s|@@URLPROTOCOL@@|vscodium|g
-            s|inode/directory;||' resources/linux/code{.desktop,-url-handler.desktop}
+            s|@@URLPROTOCOL@@|vscodium|g' resources/linux/code{.desktop,-url-handler.desktop}
 
-    sed -i 's|MimeType=.*|MimeType=x-scheme-handler/vscode;|' resources/linux/code-url-handler.desktop
+    sed -i 's|MimeType=.*|MimeType=x-scheme-handler/vscodium;|' resources/linux/code-url-handler.desktop
 
 
     # Add completitions for vscodium
@@ -92,32 +98,39 @@ prepare() {
     cp resources/completions/zsh/_code resources/completions/zsh/_codium
 
     # Patch completitions with correct names
-    sed -i 's|@@APPNAME@@|codium|g' resources/completions/{bash/code,zsh/_codium}
-    sed -i 's|@@APPNAME@@|codium|g' resources/completions/{bash/code,zsh/_codium}
+    sed -i 's|@@APPNAME@@|codium|g' resources/completions/{bash/codium,zsh/_codium}
+    sed -i 's|@@APPNAME@@|code|g' resources/completions/{bash/code,zsh/_code}
 
     # Fix bin path
     sed -i "s|return path.join(path.dirname(execPath), 'bin', \`\${product.applicationName}\`);|return '/usr/bin/codium';|g
             s|return path.join(appRoot, 'scripts', 'code-cli.sh');|return '/usr/bin/codium';|g" \
             src/vs/platform/environment/node/environmentService.ts
 
-    # Prepare VScode
+    # Prepare VScode Script Does Following Jobs
     # ../update_settings.sh
     # Apply patches, update product.json
     # Undo Telemetry
     # Sed around to be VSCodium
     cd ..
+    # Patch VSCodium patches for Arch
+    sed -i "s:\.\./:../:" prepare_vscode.sh update_settings.sh undo_telemetry.sh
+    sed -i 's:\grep -rl --exclude-dir=\.git -E "${TELEMETRY_URLS}" \.:rg --no-ignore --iglob "!*.map" -l "${TELEMETRY_URLS}" .:' undo_telemetry.sh
     # We don't build in prepare()
-    patch -Np1 -i "${srcdir}/prepare-sh-remove-yarn-lines.patch"
+    sed 's,CHILD_.*,echo done,g' -i prepare_vscode.sh
+    # fix undo_telemetry.sh
+    sed 's,./node_modules/@vscode/ripgrep/bin/rg,/usr/bin/rg,g' -i undo_telemetry.sh
+    local OS_NAME=linux
+    local RELEASE_VERSION="${pkgver}"
+    local BUILD_SOURCEVERSION=$( echo "${RELEASE_VERSION/-*/}" | sha1sum | cut -d' ' -f1 )
     ./prepare_vscode.sh
+    cat 'vscode/package.json' | jq --arg 'path' 'version' --arg 'value' "$( echo "${RELEASE_VERSION}" | sed -n -E "s/^(.*)\.([0-9]+)(-insider)?$/\1/p" )" 'setpath([$path]; $value)' > 'vscode/package.json'
+    cat 'vscode/package.json' | jq --arg 'path' 'release' --arg 'value' "$( echo "${RELEASE_VERSION}" | sed -n -E "s/^(.*)\.([0-9]+)(-insider)?$/\2/p" )" 'setpath([$path]; $value)' > 'vscode/package.json'
 }
 
 build() {
     cd 'vscodium/vscode'
     yarn install --arch=$_vscode_arch
-    gulp compile-build
-    gulp compile-extension-media
-    gulp compile-extensions-build
-    gulp vscode-linux-$_vscode_arch-min
+    gulp --openssl-legacy-provider --max_old_space_size=9999 vscode-linux-$_vscode_arch-min
 }
 
 package() {
@@ -134,17 +147,33 @@ package() {
     install -Dm 755 /dev/stdin "$pkgdir"/usr/bin/codium<<END
 #!/bin/bash
 
-ELECTRON_RUN_AS_NODE=1 exec $_electron /usr/lib/vscodium/out/cli.js /usr/lib/vscodium/codium.js "\$@"
+set -euo pipefail
+
+flags_file="\${XDG_CONFIG_HOME:-\$HOME/.config}/codium-flags.conf"
+
+declare -a flags
+
+if [[ -f "\${flags_file}" ]]; then
+    mapfile -t < "\${flags_file}"
+fi
+
+for line in "\${MAPFILE[@]}"; do
+    if [[ ! "\${line}" =~ ^[[:space:]]*#.* ]]; then
+        flags+=("\${line}")
+    fi
+done
+
+exec $_electron /usr/lib/vscodium/out/cli.js /usr/lib/vscodium/codium.js "\${flags[@]}" "\$@"
 END
     install -Dm 755 "$srcdir"/codium.js "$pkgdir"/usr/lib/$pkgname/codium.js
 
     # Code compatible symlinks
     ln -sf /usr/bin/codium "$pkgdir"/usr/bin/vscode
     ln -sf /usr/bin/codium "$pkgdir"/usr/bin/code
-    ln -sf /usr/bin/codium "$pkgdir"/usr/bin/vscodium
+    # ln -sf /usr/bin/codium "$pkgdir"/usr/bin/vscodium
 
     # Install appdata and desktop file
-    install -Dm 644 vscode/resources/linux/code.appdata.xml "$pkgdir"/usr/share/metainfo/codium.appdata.xml
+    install -Dm 644 $srcdir/com.vscodium.codium/com.vscodium.codium.metainfo.xml "$pkgdir"/usr/share/metainfo/com.vscodium.codium.metainfo.xml
     install -Dm 644 vscode/resources/linux/code.desktop "$pkgdir"/usr/share/applications/codium.desktop
     install -Dm 644 vscode/resources/linux/code-url-handler.desktop "$pkgdir"/usr/share/applications/codium-url-handler.desktop
     install -Dm 644 VSCode-linux-$_vscode_arch/resources/app/resources/linux/code.png "$pkgdir"/usr/share/pixmaps/vscodium.png
